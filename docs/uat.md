@@ -22,3 +22,7 @@ run on every push. Cases 14, 15 and 17 need a Gemini key or Power BI Desktop and
 | 15 | US-5 | `python -m inventory "Which products sold most in November 2011?"`, answer N | SQL shown; query not run | | Not yet run |
 | 16 | US-3, US-4 | Validate the Power BI project against Microsoft's schemas | 0 problems; planted mistakes are caught | 29 files, 0 problems; 4 of 4 planted mistakes caught | Pass |
 | 17 | US-3, US-4 | Open `powerbi/RetailInventory.pbip` in Power BI Desktop and compare with the check table in the dashboard guide | Figures match; 22 products below reorder point | | Not yet run |
+| 18 | Rollout | Ask four questions (run and rated right, declined, blocked, run and rated wrong) | Each logged with its outcome; approval rate 75%, accuracy as rated 50% | As expected (simulated AI) | Pass |
+| 19 | Rollout | Skip the rating after a query runs | Logged as run, not rated | As expected | Pass |
+| 20 | Rollout | `python -m inventory.pilot --candidates new.json` after an answer is marked wrong | Draft evaluation question with empty verified SQL and the user's note | As expected | Pass |
+| 21 | Rollout | Go-live gate on 9 of 10 correct; on 2 wrong answers; with no AI evaluation | GO; NO-GO; NOT READY | As expected | Pass |

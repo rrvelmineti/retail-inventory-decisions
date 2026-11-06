@@ -19,3 +19,5 @@ Thumbs.db
 # Power BI Desktop's local files inside the project
 powerbi/**/.pbi/localSettings.json
 powerbi/**/.pbi/cache.abf
+# Pilot question log (local; summarise with python -m inventory.pilot)
+data/pilot.db
