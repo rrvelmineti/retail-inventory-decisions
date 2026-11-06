@@ -48,7 +48,9 @@ def build(path=DB_PATH):
     path = Path(path)
     if path.exists():
         path.unlink()
-    with sqlite3.connect(path) as conn:
+    # "with sqlite3.connect()" commits but does not close; Windows then keeps the file locked.
+    conn = sqlite3.connect(path)
+    try:
         for table, file in TABLES.items():
             frame = pd.read_csv(PROCESSED / file, dtype={"product_code": str})
             if "below_reorder_point" in frame:
@@ -56,6 +58,9 @@ def build(path=DB_PATH):
             frame.to_sql(table, conn, index=False)
         conn.execute("CREATE INDEX sales_by_product ON daily_sales(product_code, date)")
         conn.execute("CREATE INDEX sim_by_product ON simulation_daily(product_code, service_level, date)")
+        conn.commit()
+    finally:
+        conn.close()
     return path
 
 
