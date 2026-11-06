@@ -9,8 +9,20 @@ trusted.
 - **Data:** [UCI Online Retail II](https://doi.org/10.24432/C5CG6D), about 1.07 million real
   transactions from Dec 2009 to Dec 2011 (CC BY 4.0). Stock levels, costs and lead times are
   modelled assumptions, stated in [data/README.md](data/README.md).
-- **Docs:** [problem statement](docs/problem-statement.md) · [user stories](docs/user-stories.md) ·
+- **Docs:** [implementation playbook](docs/implementation-playbook.md) ·
+  [problem statement](docs/problem-statement.md) · [user stories](docs/user-stories.md) ·
   [UAT](docs/uat.md) · [Power BI dashboard](docs/powerbi-guide.md) · [SQL verification log](docs/sql-log.md)
+
+## The implementation case
+
+**Client problem.** A store manager sets stock levels by feel, and every sales question waits for an
+analyst.
+**What was delivered.** A reorder policy tested on a year of real demand, a Power BI dashboard, and
+plain-English questions answered by AI-written SQL that the user approves before it runs.
+**How it is rolled out safely.** AI SQL must pass a go-live gate on 10 verified business questions
+(`python -m evaluation.go_live`). During the pilot, every question, approval and user rating is logged
+(`python -m inventory.pilot`), and answers marked wrong become new verified questions. The full plan
+is in the [implementation playbook](docs/implementation-playbook.md).
 
 ## The answer
 
@@ -70,6 +82,15 @@ With a Gemini API key (PowerShell: `$env:GEMINI_API_KEY="..."` and `$env:GEMINI_
 python -m inventory "Which products sold most in November 2011?"   # AI drafts SQL, you approve it
 python -m evaluation.sql_eval --gemini     # score AI SQL on the 10 questions, write docs/sql-log.md
 python -m inventory.summary --gemini       # AI-written weekly update, figure-checked
+python -m evaluation.go_live               # GO / NO-GO / NOT READY for AI SQL, with a sign-off line
+```
+
+**Pilot.** Each question asked with `python -m inventory` is logged with whether the SQL was run and
+the user's rating (right, wrong or unsure). Add `--user <name>` to record who asked.
+
+```
+python -m inventory.pilot                       # adoption, approval rate, accuracy as rated
+python -m inventory.pilot --candidates new.json # answers marked wrong, as draft evaluation questions
 ```
 
 **Dashboard:** open `powerbi/RetailInventory.pbip` in Power BI Desktop and choose Anonymous when asked how to connect to GitHub. See [docs/powerbi-guide.md](docs/powerbi-guide.md).
