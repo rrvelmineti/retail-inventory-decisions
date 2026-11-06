@@ -1,0 +1,18 @@
+# Generated database (rebuilt from data/processed with: python -m inventory.db)
+data/retail.db
+# Original 45 MB workbook: download from UCI, do not commit
+data/raw/
+*.xlsx
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+# Credentials
+.env
+.env.*
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

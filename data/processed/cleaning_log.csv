@@ -1,0 +1,8 @@
+step,lines
+raw_lines,1067371
+cancellation_lines,19494
+zero_or_negative_lines,6207
+non_product_lines,4793
+cancelled_original_lines,6950
+bulk_order_lines,632
+clean_lines,1029927
