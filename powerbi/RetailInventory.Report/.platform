@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "RetailInventory"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "dfe2a7e6-94a1-54fc-92f6-fb5b2b9f7f08"
+  }
+}

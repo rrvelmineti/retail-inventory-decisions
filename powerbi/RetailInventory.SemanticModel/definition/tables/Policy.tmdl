@@ -1,0 +1,83 @@
+/// Reorder policy per product and service level, set from 2010 demand.
+table Policy
+
+	column product_code
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: product_code
+
+	column service_level
+		dataType: double
+		formatString: 0%
+		summarizeBy: none
+		sourceColumn: service_level
+
+	column avg_daily
+		dataType: double
+		formatString: #,0.0
+		summarizeBy: none
+		sourceColumn: avg_daily
+
+	column sd_daily
+		dataType: double
+		formatString: #,0.0
+		summarizeBy: none
+		sourceColumn: sd_daily
+
+	column lead_time_days
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: lead_time_days
+
+	column z
+		dataType: double
+		formatString: 0.000
+		summarizeBy: none
+		sourceColumn: z
+
+	column unit_cost
+		dataType: double
+		formatString: £#,0.00
+		summarizeBy: none
+		sourceColumn: unit_cost
+
+	column safety_stock
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: safety_stock
+
+	column reorder_point
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: reorder_point
+
+	column order_qty
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: order_qty
+
+	column level_pct
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: level_pct
+
+	partition Policy = m
+		mode: import
+		source =
+				let
+				    Raw = if Text.StartsWith(DataFolder, "http") then Web.Contents(DataFolder & "policy.csv") else File.Contents(DataFolder & "policy.csv"),
+				    Source = Csv.Document(Raw, [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    #"Promoted headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    #"Changed types" = Table.TransformColumnTypes(#"Promoted headers", {{"product_code", type text}, {"service_level", type number}, {"avg_daily", type number}, {"sd_daily", type number}, {"lead_time_days", Int64.Type}, {"z", type number}, {"unit_cost", type number}, {"safety_stock", Int64.Type}, {"reorder_point", Int64.Type}, {"order_qty", Int64.Type}}, "en-US"),
+				    #"Added level key" = Table.AddColumn(#"Changed types", "level_pct", each Int64.From(Number.Round([service_level] * 100)), Int64.Type)
+				in
+				    #"Added level key"
+
+	annotation PBI_ResultType = Table

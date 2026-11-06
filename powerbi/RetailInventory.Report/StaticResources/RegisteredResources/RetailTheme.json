@@ -1,0 +1,16 @@
+{
+  "name": "Retail Inventory",
+  "dataColors": [
+    "#1F5F8B",
+    "#E07A2F",
+    "#2E8B57",
+    "#8E6BB8",
+    "#C94C4C",
+    "#6C7A89",
+    "#D4A72C",
+    "#4FA3C7"
+  ],
+  "foreground": "#1B2A41",
+  "background": "#FFFFFF",
+  "tableAccent": "#1F5F8B"
+}

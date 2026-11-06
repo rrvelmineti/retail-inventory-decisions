@@ -1,0 +1,32 @@
+/// The 50 regularly sold products analysed, with their median selling price.
+table Products
+
+	column product_code
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: product_code
+
+	column description
+		dataType: string
+		summarizeBy: none
+		sourceColumn: description
+
+	column median_price
+		dataType: double
+		formatString: £#,0.00
+		summarizeBy: none
+		sourceColumn: median_price
+
+	partition Products = m
+		mode: import
+		source =
+				let
+				    Raw = if Text.StartsWith(DataFolder, "http") then Web.Contents(DataFolder & "products.csv") else File.Contents(DataFolder & "products.csv"),
+				    Source = Csv.Document(Raw, [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    #"Promoted headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    #"Changed types" = Table.TransformColumnTypes(#"Promoted headers", {{"product_code", type text}, {"description", type text}, {"median_price", type number}}, "en-US")
+				in
+				    #"Changed types"
+
+	annotation PBI_ResultType = Table

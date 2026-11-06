@@ -10,7 +10,7 @@ trusted.
   transactions from Dec 2009 to Dec 2011 (CC BY 4.0). Stock levels, costs and lead times are
   modelled assumptions, stated in [data/README.md](data/README.md).
 - **Docs:** [problem statement](docs/problem-statement.md) · [user stories](docs/user-stories.md) ·
-  [UAT](docs/uat.md) · [Power BI build guide](docs/powerbi-guide.md) · [SQL verification log](docs/sql-log.md)
+  [UAT](docs/uat.md) · [Power BI dashboard](docs/powerbi-guide.md) · [SQL verification log](docs/sql-log.md)
 
 ## The answer
 
@@ -50,7 +50,7 @@ UCI workbook ──> clean ──> daily demand ──> reorder policies (2010) 
 | Backtest | Serve each day's real demand from stock, lose unmet demand, reorder at the reorder point | Code |
 | Ask a question | Gemini drafts SQL from the schema description only; you see it and approve it before it runs | AI + human |
 | Weekly update | Code writes the summary from verified figures; Gemini may rewrite it, but any figure not in the facts gets it rejected | Code, optional AI |
-| Dashboard | Power BI: reorder now, trade-off, stock over time, sales trend | Power BI |
+| Dashboard | Power BI project generated from code: reorder now, trade-off, stock over time, sales trend. Open `powerbi/RetailInventory.pbip` | Code |
 
 ## Run it
 
@@ -71,6 +71,8 @@ python -m inventory "Which products sold most in November 2011?"   # AI drafts S
 python -m evaluation.sql_eval --gemini     # score AI SQL on the 10 questions, write docs/sql-log.md
 python -m inventory.summary --gemini       # AI-written weekly update, figure-checked
 ```
+
+**Dashboard:** open `powerbi/RetailInventory.pbip` in Power BI Desktop and choose Anonymous when asked how to connect to GitHub. See [docs/powerbi-guide.md](docs/powerbi-guide.md).
 
 To rebuild from the original workbook, see [data/README.md](data/README.md).
 
@@ -107,6 +109,7 @@ To rebuild from the original workbook, see [data/README.md](data/README.md).
     which exaggerated a 22% drop. It now uses only complete weeks.
   - The figure checker rejected the code's own summary, because "down 22.5%" is stored as −22.5.
     Fixed, and covered by a test that the code-written summary always passes its own check.
+  - The Power BI dashboard is generated as code (TMDL and PBIR). Every JSON file is validated against Microsoft's published schemas, and the checker was proven by planting four mistakes and confirming each was caught.
   - A first check of the data found an 80,995-unit order that was cancelled the same day. Keeping
     it would have distorted demand, so cancelled originals are now removed.
 

@@ -1,0 +1,79 @@
+/// Day-by-day 2011 backtest of each policy on real demand. Stock levels are simulated.
+table 'Stock Simulation'
+
+	column product_code
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: product_code
+
+	column service_level
+		dataType: double
+		formatString: 0%
+		summarizeBy: none
+		sourceColumn: service_level
+
+	column date
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column demand
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: demand
+
+	column sold
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: sold
+
+	column lost
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: lost
+
+	column on_hand
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: on_hand
+
+	column on_order
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: on_order
+
+	column ordered
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: ordered
+
+	column level_pct
+		dataType: int64
+		formatString: 0
+		isHidden
+		summarizeBy: none
+		sourceColumn: level_pct
+
+	partition 'Stock Simulation' = m
+		mode: import
+		source =
+				let
+				    Raw = if Text.StartsWith(DataFolder, "http") then Web.Contents(DataFolder & "simulation_daily.csv") else File.Contents(DataFolder & "simulation_daily.csv"),
+				    Source = Csv.Document(Raw, [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    #"Promoted headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    #"Changed types" = Table.TransformColumnTypes(#"Promoted headers", {{"product_code", type text}, {"service_level", type number}, {"date", type date}, {"demand", Int64.Type}, {"sold", Int64.Type}, {"lost", Int64.Type}, {"on_hand", Int64.Type}, {"on_order", Int64.Type}, {"ordered", Int64.Type}}, "en-US"),
+				    #"Added level key" = Table.AddColumn(#"Changed types", "level_pct", each Int64.From(Number.Round([service_level] * 100)), Int64.Type)
+				in
+				    #"Added level key"
+
+	annotation PBI_ResultType = Table

@@ -16,3 +16,6 @@ venv/
 .idea/
 .DS_Store
 Thumbs.db
+# Power BI Desktop's local files inside the project
+powerbi/**/.pbi/localSettings.json
+powerbi/**/.pbi/cache.abf

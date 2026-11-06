@@ -1,0 +1,77 @@
+/// All report measures.
+table 'Key Measures'
+
+	/// All units sold, regular plus bulk orders.
+	measure 'Units Sold' = SUM ( Sales[units] ) + SUM ( Sales[bulk_units] )
+		formatString: #,0
+
+	/// All sales revenue in GBP, regular plus bulk orders.
+	measure Revenue = SUM ( Sales[revenue] ) + SUM ( Sales[bulk_revenue] )
+		formatString: £#,0
+
+	/// Number of products in the analysis.
+	measure 'Products Tracked' = DISTINCTCOUNT ( Products[product_code] )
+		formatString: #,0
+
+	/// Product-days in the 2011 backtest when demand could not be fully met.
+	measure 'Stockout Days' = SUM ( 'Backtest Summary'[stockout_days] )
+		formatString: #,0
+
+	/// Units of demand lost to stockouts in the 2011 backtest.
+	measure 'Lost Units' = SUM ( 'Backtest Summary'[lost_units] )
+		formatString: #,0
+
+	/// Share of 2011 demand served from stock.
+	measure 'Fill Rate' = DIVIDE ( SUM ( 'Backtest Summary'[sold_units] ), SUM ( 'Backtest Summary'[demand_units] ) )
+		formatString: 0.0%
+
+	/// Cost of holding stock during 2011, at 25% of stock value per year.
+	measure 'Holding Cost' = SUM ( 'Backtest Summary'[holding_cost] )
+		formatString: £#,0
+
+	/// Margin lost on units that could not be sold because of stockouts.
+	measure 'Lost Margin' = SUM ( 'Backtest Summary'[lost_margin] )
+		formatString: £#,0
+
+	/// Holding cost plus lost margin: the number to minimise.
+	measure 'Total Cost' = [Holding Cost] + [Lost Margin]
+		formatString: £#,0
+
+	/// Average value of stock on hand during 2011, at unit cost.
+	measure 'Avg Stock Value' = SUM ( 'Backtest Summary'[avg_stock_value] )
+		formatString: £#,0
+
+	/// Products at or below their reorder point on 9 December 2011 (95% service level).
+	measure 'Products Below Reorder Point' = CALCULATE ( COUNTROWS ( 'Reorder Status' ), 'Reorder Status'[status] = "Reorder now" ) + 0
+		formatString: #,0
+
+	/// Units by which stock on hand is below the reorder point, summed over products.
+	measure 'Shortfall Units' = SUMX ( 'Reorder Status', MAX ( 0, 'Reorder Status'[reorder_point] - 'Reorder Status'[on_hand] ) )
+		formatString: #,0
+
+	/// Simulated stock on hand at the end of each day.
+	measure 'On Hand' = SUM ( 'Stock Simulation'[on_hand] )
+		formatString: #,0
+
+	/// Reorder point of the selected product and service level, shown on days with simulated stock.
+	measure 'Reorder Point' = IF ( NOT ISBLANK ( [On Hand] ), SUM ( Policy[reorder_point] ) )
+		formatString: #,0
+
+	/// Units of demand lost on each day of the backtest.
+	measure 'Lost Sales Units' = SUM ( 'Stock Simulation'[lost] )
+		formatString: #,0
+
+	column Value
+		dataType: int64
+		formatString: 0
+		isHidden
+		isNameInferred
+		summarizeBy: none
+		sourceColumn: [Value]
+
+	partition 'Key Measures' = calculated
+		mode: import
+		source = ```
+				{ 0 }
+				```
+

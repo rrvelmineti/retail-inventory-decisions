@@ -1,0 +1,4 @@
+/// Folder or web address holding the CSV files, ending in / or a backslash.
+expression DataFolder = "https://raw.githubusercontent.com/rrvelmineti/retail-inventory-decisions/main/data/processed/" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+
+	annotation PBI_ResultType = Text

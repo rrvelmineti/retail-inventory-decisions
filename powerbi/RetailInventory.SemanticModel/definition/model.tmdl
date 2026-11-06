@@ -1,0 +1,20 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation PBI_QueryOrder = ["DataFolder", "Products", "Sales", "Policy", "Stock Simulation", "Backtest Summary", "Reorder Status"]
+
+ref table Products
+ref table Sales
+ref table Policy
+ref table 'Stock Simulation'
+ref table 'Backtest Summary'
+ref table 'Reorder Status'
+ref table Calendar
+ref table 'Service Level'
+ref table 'Key Measures'

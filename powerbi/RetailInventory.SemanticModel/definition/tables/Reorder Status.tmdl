@@ -1,0 +1,76 @@
+/// Position of each product on 9 December 2011 at the 95% service level.
+table 'Reorder Status'
+
+	column product_code
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: product_code
+
+	column date
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column on_hand
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: on_hand
+
+	column on_order
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: on_order
+
+	column position
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: position
+
+	column reorder_point
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: reorder_point
+
+	column safety_stock
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: safety_stock
+
+	column order_qty
+		dataType: int64
+		formatString: #,0
+		summarizeBy: none
+		sourceColumn: order_qty
+
+	column below_reorder_point
+		dataType: boolean
+		summarizeBy: none
+		sourceColumn: below_reorder_point
+
+	column status
+		dataType: string
+		summarizeBy: none
+		sourceColumn: status
+
+	partition 'Reorder Status' = m
+		mode: import
+		source =
+				let
+				    Raw = if Text.StartsWith(DataFolder, "http") then Web.Contents(DataFolder & "reorder_status.csv") else File.Contents(DataFolder & "reorder_status.csv"),
+				    Source = Csv.Document(Raw, [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    #"Promoted headers" = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    #"Changed types" = Table.TransformColumnTypes(#"Promoted headers", {{"product_code", type text}, {"date", type date}, {"on_hand", Int64.Type}, {"on_order", Int64.Type}, {"position", Int64.Type}, {"reorder_point", Int64.Type}, {"safety_stock", Int64.Type}, {"order_qty", Int64.Type}, {"below_reorder_point", type logical}}, "en-US"),
+				    #"Added status" = Table.AddColumn(#"Changed types", "status", each if [below_reorder_point] then "Reorder now" else "OK", type text)
+				in
+				    #"Added status"
+
+	annotation PBI_ResultType = Table

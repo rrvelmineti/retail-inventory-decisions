@@ -1,0 +1,47 @@
+/// One row per calendar day, December 2009 to December 2011.
+table Calendar
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		formatString: dd mmm yyyy
+		isKey
+		isNameInferred
+		summarizeBy: none
+		sourceColumn: [Date]
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Month
+		dataType: string
+		isNameInferred
+		summarizeBy: none
+		sourceColumn: [Month]
+
+	column Year
+		dataType: int64
+		formatString: 0
+		isNameInferred
+		summarizeBy: none
+		sourceColumn: [Year]
+
+	column 'Month Start'
+		dataType: dateTime
+		formatString: mmm yyyy
+		isNameInferred
+		summarizeBy: none
+		sourceColumn: [Month Start]
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition Calendar = calculated
+		mode: import
+		source = ```
+				ADDCOLUMNS (
+				    CALENDAR ( DATE ( 2009, 12, 1 ), DATE ( 2011, 12, 31 ) ),
+				    "Month", FORMAT ( [Date], "YYYY-MM" ),
+				    "Year", YEAR ( [Date] ),
+				    "Month Start", DATE ( YEAR ( [Date] ), MONTH ( [Date] ), 1 )
+				)
+				```
+

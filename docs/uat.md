@@ -1,7 +1,7 @@
 # UAT test cases
 
-Run on 5 November 2026. Cases 1 to 13 have automated equivalents in `tests/test_inventory.py` and
-run on every push. Cases 14 to 16 need a Gemini key or Power BI Desktop and are run by hand.
+Run on 5 November 2026. Cases 1 to 13 and 16 have automated equivalents in `tests/` and
+run on every push. Cases 14, 15 and 17 need a Gemini key or Power BI Desktop and are run by hand.
 
 | # | Story | Steps | Expected | Actual | Result |
 | --- | --- | --- | --- | --- | --- |
@@ -20,4 +20,5 @@ run on every push. Cases 14 to 16 need a Gemini key or Power BI Desktop and are 
 | 13 | US-7 | AI summary claims "about 30%" and "roughly 25,000 units" | Rejected | Rejected | Pass |
 | 14 | US-6 | `python -m evaluation.sql_eval --gemini` | 10 questions logged with outcome and corrections in `docs/sql-log.md` | | Not yet run |
 | 15 | US-5 | `python -m inventory "Which products sold most in November 2011?"`, answer N | SQL shown; query not run | | Not yet run |
-| 16 | US-3, US-4 | Open the Power BI dashboard and compare with section 6 of the build guide | Figures match `tradeoff.csv`; 22 products below reorder point | | Not yet run |
+| 16 | US-3, US-4 | Validate the Power BI project against Microsoft's schemas | 0 problems; planted mistakes are caught | 29 files, 0 problems; 4 of 4 planted mistakes caught | Pass |
+| 17 | US-3, US-4 | Open `powerbi/RetailInventory.pbip` in Power BI Desktop and compare with the check table in the dashboard guide | Figures match; 22 products below reorder point | | Not yet run |

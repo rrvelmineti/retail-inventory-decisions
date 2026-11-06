@@ -1,0 +1,40 @@
+relationship 00d0eee2-cec4-5966-ae56-219f4c5e47e3
+	fromColumn: Sales.product_code
+	toColumn: Products.product_code
+
+relationship 3e23ea37-79e6-581b-80f3-a46cc5c2920b
+	fromColumn: Sales.date
+	toColumn: Calendar.Date
+
+relationship 417e0f45-0033-5653-a2b6-ac062da3e8ec
+	fromColumn: Policy.product_code
+	toColumn: Products.product_code
+
+relationship 0a099797-8235-5c8a-95e7-58510d3c0f20
+	fromColumn: Policy.level_pct
+	toColumn: 'Service Level'.level_pct
+
+relationship d76ad5f6-e47a-5e94-9745-387c44be1b16
+	fromColumn: 'Stock Simulation'.product_code
+	toColumn: Products.product_code
+
+relationship 963d6173-c4fd-53ac-b29a-30750d37a6c6
+	fromColumn: 'Stock Simulation'.date
+	toColumn: Calendar.Date
+
+relationship b681ea1e-2de5-5fe8-8862-5ba087dea6f4
+	fromColumn: 'Stock Simulation'.level_pct
+	toColumn: 'Service Level'.level_pct
+
+relationship 7900ec50-57d8-5fe0-9960-6ff03672c3d1
+	fromColumn: 'Backtest Summary'.product_code
+	toColumn: Products.product_code
+
+relationship a6eb4607-c8b5-55d1-ac6f-fa9385a94f34
+	fromColumn: 'Backtest Summary'.level_pct
+	toColumn: 'Service Level'.level_pct
+
+relationship 21986e97-488b-5e3e-af82-5e60a8776cbc
+	fromColumn: 'Reorder Status'.product_code
+	toColumn: Products.product_code
+
