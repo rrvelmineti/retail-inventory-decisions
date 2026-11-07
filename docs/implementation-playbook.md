@@ -29,17 +29,41 @@ reaching decisions.
 4. Which questions does the team ask every week? (These become the verified question set.)
 5. Who checks a figure before it drives an order or a report?
 
-The assumptions that come out of this (margin, holding rate, lead times) are written down in
-[data/README.md](../data/README.md), so finance can challenge them before anyone relies on the results.
+Discovery produces two documents:
 
-## 2. Decision support (weeks 2–3)
+- **The business requirements** ([business-requirements.md](business-requirements.md)): goals,
+  17 requirements with acceptance criteria, assumptions, risks and a sign-off table.
+- **The client settings** ([config/client_settings.json](../config/client_settings.json)): unit cost
+  share, holding rate, service levels, order size, the client's real lead times and finance's hurdle
+  return. `python -m inventory.settings` checks them and lists every problem at once, so a typo cannot
+  quietly change every reorder point.
+
+## 2. Load the client's data (week 2)
+
+The client sends a sales export in its own format.
+
+1. `python -m inventory.onboard export.csv` maps the columns by name. Anything it can't match is set
+   by the analyst in `mapping.json`, never guessed.
+2. Every row is checked: date in the agreed format, product code, whole-number quantity, price.
+   Returns load as cancellations, and double exports are flagged.
+3. The decision is **Ready to load** only when every required field is mapped and at most 1% of rows
+   are rejected. Otherwise `rejected.csv`, with line numbers and reasons, goes back to the client.
+4. The saved mapping is reused on next month's file.
+
+On the sample export, all 17 planted bad rows were rejected and no good ones
+([report](onboarding-sample-report.md)).
+
+## 3. Decision support (weeks 2–3)
 
 - Backtest the reorder policies on demand they never saw, and show the trade-off, not just one number.
   The manager chooses the service level; the recommendation (98%) explains why.
+- Give finance the cash view: `python -m inventory.finance` writes the
+  [finance summary](finance-summary.md). It shows the working capital tied up at each service level,
+  and judges each step up against finance's hurdle return. Finance signs off the assumptions there.
 - Build the Power BI dashboard around the decisions people make: what to reorder now, what each
   service level costs, and how stock moved.
 
-## 3. Go-live gate for AI questions (end of week 3)
+## 4. Go-live gate for AI questions (end of week 3)
 
 Before anyone outside the project uses AI-written SQL, it is scored on 10 verified business
 questions (`python -m evaluation.sql_eval --gemini`). The criteria are agreed in advance:
@@ -52,8 +76,11 @@ questions (`python -m evaluation.sql_eval --gemini`). The criteria are agreed in
 | Queries refused by the read-only check | 0 | No |
 
 `python -m evaluation.go_live` writes a GO, NO-GO or NOT READY decision with a sign-off line.
+**Result on 7 Nov 2026: 9 of 10 correct, GO.** The miss (Q8) returned the top 5 products when the
+question meant the single longest lead time. The fix was partly a clearer question, a useful lesson
+for training users.
 
-## 4. Pilot (weeks 4–5)
+## 5. Pilot (weeks 4–5)
 
 - Pilot users ask real questions: `python -m inventory --user <name> "..."`. They see the SQL and
   approve it before it runs, then rate the answer: right, wrong or unsure.
@@ -67,21 +94,25 @@ questions (`python -m evaluation.sql_eval --gemini`). The criteria are agreed in
 | Accuracy as rated | Do users think the answers are right? |
 | Answers marked wrong | `--candidates` exports each one as a draft evaluation question for an analyst to verify, so the test set grows from real use. |
 
-## 5. Training and change management
+## 6. Training and change management
 
 - 30 minutes on reading the AI's SQL: which table, which dates, regular or bulk sales.
 - One rule: **check the stated assumption before running the query.**
 - The weekly update is code-written from verified figures. The team learns why an AI rewrite that
   adds a number is rejected.
 
-## 6. After go-live
+## 7. After go-live
 
 - Weekly: pilot report, the reorder-now list, and the weekly update.
 - Monthly: rerun the evaluation, including the questions added from the pilot, and the go-live gate.
 - Next improvement, already identified: seasonal reorder points. Most stockout days fall in
   September to December under a single yearly average.
 
-## 7. Handover
+## 8. User acceptance and handover
+
+Acceptance is run from the [UAT plan](uat-signoff.md): 27 cases, each traced to a requirement and,
+where possible, to an automated test that reruns on every push. A test fails if any requirement is
+left untested. The store manager and finance sign the plan's sign-off table.
 
 The store team receives: the dashboard, the run commands in the README, the verified question set,
-the assumptions in `data/README.md`, and this playbook.
+the client settings, the onboarding mapping, the requirements and signed UAT plan, and this playbook.

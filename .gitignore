@@ -21,3 +21,6 @@ powerbi/**/.pbi/localSettings.json
 powerbi/**/.pbi/cache.abf
 # Pilot question log (local; summarise with python -m inventory.pilot)
 data/pilot.db
+
+# Client onboarding runs (outputs per client file)
+data/onboarding/
