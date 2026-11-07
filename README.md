@@ -8,9 +8,38 @@ trusted.
 
 - **Data:** [UCI Online Retail II](https://doi.org/10.24432/C5CG6D), about 1.07 million real
   transactions from Dec 2009 to Dec 2011 (CC BY 4.0). Stock levels, costs and lead times are
-  modelled assumptions, stated in [data/README.md](data/README.md).
-- **Docs:** [problem statement](docs/problem-statement.md) · [user stories](docs/user-stories.md) ·
-  [UAT](docs/uat.md) · [Power BI dashboard](docs/powerbi-guide.md) · [SQL verification log](docs/sql-log.md)
+  modelled assumptions, kept in a client settings file ([config/client_settings.json](config/client_settings.json))
+  and explained in [data/README.md](data/README.md).
+- **Client documents:** [business requirements](docs/business-requirements.md) ·
+  [UAT plan and sign-off](docs/uat-signoff.md) · [finance summary](docs/finance-summary.md) ·
+  [onboarding report (sample)](docs/onboarding-sample-report.md) · [implementation playbook](docs/implementation-playbook.md)
+- **Working docs:** [problem statement](docs/problem-statement.md) · [user stories](docs/user-stories.md) ·
+  [UAT log](docs/uat.md) · [Power BI dashboard](docs/powerbi-guide.md) · [SQL verification log](docs/sql-log.md)
+
+## The implementation case
+
+**Client problem.** A store manager sets stock levels by feel, and every sales question waits for an
+analyst.
+**What was delivered.**
+- **Client data onboarding.** The retailer's own sales export is mapped by column name, every row is
+  checked, only clean rows load, and rejected rows go back to the client with line numbers.
+- **A configuration workbook.** Costs, lead times and service levels live in a client settings file
+  that is checked before every run.
+- **A reorder policy** tested on a year of real demand, with a **finance view** of the cash tied up in
+  stock at each service level.
+- **A Power BI dashboard**, and plain-English questions answered by AI-written SQL that the user
+  approves before it runs.
+- **A business requirements document and a UAT plan**. Every requirement is traced to a test, and a
+  test fails if one isn't.
+
+**Result.** AI-written SQL answered **9 of 10** verified business questions correctly first time, and the
+go-live gate said **GO** (7 Nov 2026, `gemini-3.5-flash-lite`). The one miss was traced to a vague
+question and corrected ([log](docs/sql-log.md)).
+
+**How it is rolled out safely.** AI SQL must pass a go-live gate on 10 verified business questions
+(`python -m evaluation.go_live`). During the pilot, every question, approval and user rating is logged
+(`python -m inventory.pilot`), and answers marked wrong become new verified questions. The full plan
+is in the [implementation playbook](docs/implementation-playbook.md).
 
 ## The answer
 
@@ -30,14 +59,21 @@ an extra unit, so total cost falls as the buffer grows. Going from 98% to 99% sa
 £50 more a year, for £818 more in holding cost and £3,466 more stock on the shelf. That makes
 98% the point where extra buffer stops paying for itself.
 
+**For finance:** moving from 95% to 98% ties up **£5,097** more cash in stock and saves **£890 a year**
+after holding cost, a 17% yearly return on the extra cash. The step from 98% to 99% returns only 1.5%,
+below finance's 10% hurdle, so the recommendation stops at 98%. See the
+[finance summary](docs/finance-summary.md), which is generated from the backtest and has sign-off lines.
+
 On the last day of the data, 9 December 2011, **22 of 50 products** were at or below their
 reorder point at the 95% level, which is expected in the pre-Christmas peak.
 
 ## How it works
 
 ```
-UCI workbook ──> clean ──> daily demand ──> reorder policies (2010) ──> 2011 backtest
-                                                                           │
+client export ──> map + check every row ──> clean rows in platform format    (new client)
+UCI workbook ──> clean ──> daily demand ──> reorder policies (2010) ──> 2011 backtest ──> finance view
+                                                  ▲                        │
+                              client settings (checked before every run)   │
                           SQLite (read-only) <── CSV tables ──> Power BI dashboard
                                │
         plain-English question ─> Gemini drafts SQL ─> safety check ─> run ─> compare with verified answer
@@ -45,9 +81,12 @@ UCI workbook ──> clean ──> daily demand ──> reorder policies (2010) 
 
 | Step | What happens | AI or code |
 | --- | --- | --- |
+| Onboard | Map the client's columns by name, check every row, reject bad rows with line numbers, load the rest in the platform's format | Code |
+| Settings | Costs, lead times and service levels from `config/client_settings.json`, every problem listed before anything runs | Code |
 | Clean | Remove cancellations and their original lines, postage and fee codes; flag one-off bulk orders | Code |
 | Reorder points | Average demand × lead time + safety stock (z × std dev × √lead time) | Code |
 | Backtest | Serve each day's real demand from stock, lose unmet demand, reorder at the reorder point | Code |
+| Finance view | Cash tied up in stock at each level; each step up judged against finance's hurdle return | Code |
 | Ask a question | Gemini drafts SQL from the schema description only; you see it and approve it before it runs | AI + human |
 | Weekly update | Code writes the summary from verified figures; Gemini may rewrite it, but any figure not in the facts gets it rejected | Code, optional AI |
 | Dashboard | Power BI project generated from code: reorder now, trade-off, stock over time, sales trend. Open `powerbi/RetailInventory.pbip` | Code |
@@ -58,6 +97,9 @@ Python 3.10+:
 
 ```
 python -m pip install -r requirements.txt
+python -m inventory.settings               # check the client settings before any run
+python -m inventory.policy                 # reorder policies and the 2011 backtest
+python -m inventory.finance                # working capital by service level -> docs/finance-summary.md
 python -m inventory.db                     # build the SQLite database from data/processed
 python -m inventory.summary                # this week's update for the manager
 python -m evaluation.sql_eval              # run the 10 verified business queries
@@ -70,7 +112,28 @@ With a Gemini API key (PowerShell: `$env:GEMINI_API_KEY="..."` and `$env:GEMINI_
 python -m inventory "Which products sold most in November 2011?"   # AI drafts SQL, you approve it
 python -m evaluation.sql_eval --gemini     # score AI SQL on the 10 questions, write docs/sql-log.md
 python -m inventory.summary --gemini       # AI-written weekly update, figure-checked
+python -m evaluation.go_live               # GO / NO-GO / NOT READY for AI SQL, with a sign-off line
 ```
+
+**Pilot.** Each question asked with `python -m inventory` is logged with whether the SQL was run and
+the user's rating (right, wrong or unsure). Add `--user <name>` to record who asked.
+
+```
+python -m inventory.pilot                       # adoption, approval rate, accuracy as rated
+python -m inventory.pilot --candidates new.json # answers marked wrong, as draft evaluation questions
+```
+
+**Onboarding a new client's sales export.** The sample in `examples/client/` has the client's own
+column names, UK dates and 24 planted problems ([answer key](examples/client/answer_key.json)).
+
+```
+python -m inventory.onboard examples/client/sales_export.csv                 # report, clean rows, rejects
+python -m inventory.onboard next_month.csv --mapping data/onboarding/mapping.json   # reuse the mapping
+```
+
+On the sample it rejects all 17 bad rows and no good ones, loads the 4 returns as cancellations, flags
+3 double-exported lines, and says **Not ready**: 2.8% of rows were rejected, above the agreed 1%. The
+clean rows pass the platform's own cleaning step unchanged. [Sample report](docs/onboarding-sample-report.md).
 
 **Dashboard:** open `powerbi/RetailInventory.pbip` in Power BI Desktop and choose Anonymous when asked how to connect to GitHub. See [docs/powerbi-guide.md](docs/powerbi-guide.md).
 

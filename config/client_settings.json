@@ -1,0 +1,21 @@
+{
+  "_about": "Client settings for the reorder policy. Agreed with the store manager and finance during discovery and checked by `python -m inventory.settings` before any run. Values are fractions (0.25 = 25%).",
+  "client": "UK online gift retailer (UCI Online Retail II)",
+  "currency": "GBP",
+  "service_levels": [0.80, 0.90, 0.95, 0.98, 0.99],
+  "default_service_level": 0.95,
+  "unit_cost_share": 0.60,
+  "holding_rate_year": 0.25,
+  "trading_days_year": 302,
+  "order_cover_days": 24,
+  "min_return_on_extra_stock": 0.10,
+  "lead_time_days": {
+    "default_range": [5, 20],
+    "overrides": {}
+  },
+  "sign_off": {
+    "store_manager": "",
+    "finance": "",
+    "date": ""
+  }
+}

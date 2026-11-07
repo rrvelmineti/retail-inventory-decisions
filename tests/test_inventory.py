@@ -98,6 +98,18 @@ class PolicyTests(unittest.TestCase):
         committed = load("tradeoff.csv")
         pd.testing.assert_frame_equal(t.reset_index(drop=True), committed, check_dtype=False)
 
+    def test_reorder_status_lists_products_at_or_below_their_reorder_point(self):
+        products, sales = load("products.csv"), load("daily_sales.csv")
+        policies = build_policies(products, sales)
+        sims, _ = run_backtest(products, sales, policies)
+        status = reorder_status(policies, sims)
+        self.assertEqual(len(status), len(products))
+        self.assertEqual(set(status["date"]), {"2011-12-09"})
+        below = status[status["below_reorder_point"]]
+        self.assertTrue((below["on_hand"] <= below["reorder_point"]).all())
+        self.assertEqual(len(below), 22)
+        pd.testing.assert_frame_equal(status.reset_index(drop=True), load("reorder_status.csv"), check_dtype=False)
+
     def test_policy_uses_only_2010_demand(self):
         products, sales = load("products.csv"), load("daily_sales.csv")
         changed = sales.copy()

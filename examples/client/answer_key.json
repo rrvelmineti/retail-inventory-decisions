@@ -1,0 +1,115 @@
+{
+  "about": "Planted problems in sales_export.csv. Line numbers count the header as line 1. For duplicates, the line is the second copy.",
+  "mapping": {
+    "invoice": "Order No",
+    "invoice_date": "Order Date",
+    "product_code": "SKU",
+    "description": "Item Name",
+    "quantity": "Qty",
+    "unit_price": "Unit Price (GBP)",
+    "customer_id": "Cust #",
+    "country": "Ship Country"
+  },
+  "date_format": "%d/%m/%Y %H:%M",
+  "rows": 603,
+  "blocking": [
+    {
+      "kind": "price_negative",
+      "line": 65
+    },
+    {
+      "kind": "qty_not_number",
+      "line": 108
+    },
+    {
+      "kind": "qty_zero",
+      "line": 111
+    },
+    {
+      "kind": "qty_not_number",
+      "line": 128
+    },
+    {
+      "kind": "missing_sku",
+      "line": 237
+    },
+    {
+      "kind": "bad_date",
+      "line": 273
+    },
+    {
+      "kind": "price_missing",
+      "line": 331
+    },
+    {
+      "kind": "missing_sku",
+      "line": 336
+    },
+    {
+      "kind": "price_negative",
+      "line": 338
+    },
+    {
+      "kind": "qty_zero",
+      "line": 420
+    },
+    {
+      "kind": "bad_date",
+      "line": 448
+    },
+    {
+      "kind": "qty_not_number",
+      "line": 459
+    },
+    {
+      "kind": "qty_fraction",
+      "line": 486
+    },
+    {
+      "kind": "qty_fraction",
+      "line": 528
+    },
+    {
+      "kind": "missing_sku",
+      "line": 574
+    },
+    {
+      "kind": "bad_date",
+      "line": 575
+    },
+    {
+      "kind": "price_missing",
+      "line": 577
+    }
+  ],
+  "warnings": [
+    {
+      "kind": "return",
+      "line": 53
+    },
+    {
+      "kind": "return",
+      "line": 114
+    },
+    {
+      "kind": "return",
+      "line": 216
+    },
+    {
+      "kind": "duplicate",
+      "line": 220
+    },
+    {
+      "kind": "duplicate",
+      "line": 255
+    },
+    {
+      "kind": "duplicate",
+      "line": 310
+    },
+    {
+      "kind": "return",
+      "line": 562
+    }
+  ]
+}

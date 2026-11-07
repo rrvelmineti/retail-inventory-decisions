@@ -47,7 +47,10 @@ on days a product did not sell.
 
 ## Modelled assumptions
 
-The dataset has sales only. These assumptions turn it into an inventory scenario:
+The dataset has sales only. These assumptions turn it into an inventory scenario. They are set in
+[config/client_settings.json](../config/client_settings.json), checked with `python -m inventory.settings`
+before any run, and listed for finance to sign off in [docs/finance-summary.md](../docs/finance-summary.md).
+A client's real lead time for a product goes in `lead_time_days.overrides`.
 
 | Assumption | Value |
 | --- | --- |
@@ -57,6 +60,7 @@ The dataset has sales only. These assumptions turn it into an inventory scenario
 | Order quantity | About 24 trading days (4 weeks) of average demand |
 | Lost sale | Unmet demand is lost, not back-ordered |
 | Lost margin | Selling price minus unit cost, per lost unit |
+| Finance's hurdle | Extra stock must save at least 10% of the extra cash a year, after holding cost |
 
 ## Files in `processed/`
 
@@ -70,4 +74,5 @@ The dataset has sales only. These assumptions turn it into an inventory scenario
 | simulation_summary.csv | 2011 totals per product and service level |
 | tradeoff.csv | 2011 totals per service level, all products |
 | reorder_status.csv | Position of each product on 9 December 2011 at the 95% level |
+| working_capital.csv | Cash tied up in stock at each service level, and the change against the current level |
 | cleaning_log.csv | Lines removed at each cleaning step |

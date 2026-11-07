@@ -1,0 +1,98 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "run_on": "2026-11-07",
+  "correct": 9,
+  "total": 10,
+  "results": [
+    {
+      "id": "Q1",
+      "question": "Which 10 products sold the most units in 2011, counting both regular and bulk sales?",
+      "verified_sql": "SELECT product_code, SUM(units + bulk_units) AS units_2011 FROM daily_sales WHERE date >= '2011-01-01' AND date < '2012-01-01' GROUP BY product_code ORDER BY units_2011 DESC LIMIT 10",
+      "ai_sql": "SELECT p.product_code, p.description, SUM(d.units + d.bulk_units) AS total_units FROM products p JOIN daily_sales d ON p.product_code = d.product_code WHERE d.date LIKE '2011-%' GROUP BY p.product_code, p.description ORDER BY total_units DESC LIMIT 10",
+      "assumptions": "Units in 2011 are calculated as the sum of regular units and bulk units across all trading days in the year 2011.",
+      "outcome": "correct",
+      "note": "Returned 10 rows; matches the verified answer."
+    },
+    {
+      "id": "Q2",
+      "question": "What was total revenue, regular plus bulk, in each month of 2011?",
+      "verified_sql": "SELECT substr(date, 1, 7) AS month, ROUND(SUM(revenue + bulk_revenue), 2) AS revenue FROM daily_sales WHERE date >= '2011-01-01' AND date < '2012-01-01' GROUP BY month ORDER BY month",
+      "ai_sql": "SELECT t.month, ROUND(SUM(d.revenue + d.bulk_revenue), 2) AS total_revenue FROM trading_days t JOIN daily_sales d ON t.date = d.date WHERE t.month LIKE '2011-%' GROUP BY t.month ORDER BY t.month;",
+      "assumptions": "Total revenue includes both regular and bulk revenue summed across all products for each trading month in 2011.",
+      "outcome": "correct",
+      "note": "Returned 12 rows; matches the verified answer."
+    },
+    {
+      "id": "Q3",
+      "question": "In the 2011 backtest at the 95% service level, which 5 products had the most stockout days?",
+      "verified_sql": "SELECT product_code, stockout_days FROM simulation_summary WHERE service_level = 0.95 ORDER BY stockout_days DESC, product_code LIMIT 5",
+      "ai_sql": "SELECT p.product_code, p.description, s.stockout_days FROM simulation_summary s JOIN products p ON s.product_code = p.product_code WHERE s.service_level = 0.95 ORDER BY s.stockout_days DESC, s.lost_units DESC LIMIT 5",
+      "assumptions": "The 95% service level corresponds to service_level = 0.95 in the simulation_summary table.",
+      "outcome": "correct",
+      "note": "Returned 5 rows; matches the verified answer."
+    },
+    {
+      "id": "Q4",
+      "question": "Which products are at or below their reorder point on the last day of the data?",
+      "verified_sql": "SELECT product_code FROM reorder_status WHERE below_reorder_point = 1",
+      "ai_sql": "SELECT p.product_code, p.description FROM reorder_status r JOIN products p ON r.product_code = p.product_code WHERE r.below_reorder_point = 1",
+      "assumptions": "Assumed the question refers to the pre-calculated 0.95 service level in the reorder_status table on the last trading day.",
+      "outcome": "correct",
+      "note": "Returned 22 rows; matches the verified answer."
+    },
+    {
+      "id": "Q5",
+      "question": "Which day of the week has the highest average regular units sold per trading day, across all products?",
+      "verified_sql": "SELECT t.weekday FROM daily_sales s JOIN trading_days t ON t.date = s.date GROUP BY t.weekday ORDER BY 1.0 * SUM(s.units) / COUNT(DISTINCT s.date) DESC LIMIT 1",
+      "ai_sql": "SELECT t.weekday, ROUND(AVG(d.total_units), 2) AS avg_units FROM trading_days t JOIN (SELECT date, SUM(units) AS total_units FROM daily_sales GROUP BY date) d ON t.date = d.date GROUP BY t.weekday ORDER BY avg_units DESC LIMIT 1;",
+      "assumptions": "Average regular units sold per trading day is calculated by summing regular units across all products for each day, then averaging those daily totals by weekday.",
+      "outcome": "correct",
+      "note": "Returned 1 rows; matches the verified answer."
+    },
+    {
+      "id": "Q6",
+      "question": "Across all products, how much more holding cost did the 99% service level incur than the 95% level in the 2011 backtest?",
+      "verified_sql": "SELECT ROUND(SUM(CASE WHEN service_level = 0.99 THEN holding_cost ELSE 0 END) - SUM(CASE WHEN service_level = 0.95 THEN holding_cost ELSE 0 END), 2) AS extra_holding_cost FROM simulation_summary",
+      "ai_sql": "SELECT ROUND(SUM(CASE WHEN service_level = 0.99 THEN holding_cost ELSE 0 END) - SUM(CASE WHEN service_level = 0.95 THEN holding_cost ELSE 0 END), 2) AS holding_cost_difference FROM simulation_summary WHERE service_level IN (0.95, 0.99);",
+      "assumptions": "The holding cost difference is calculated by summing the total holding costs across all products for the 99% service level and subtracting the sum for the 95% service level from the simulation_summary table.",
+      "outcome": "correct",
+      "note": "Returned 1 rows; matches the verified answer."
+    },
+    {
+      "id": "Q7",
+      "question": "For each service level, what fraction of 2011 regular demand was lost to stockouts in the backtest?",
+      "verified_sql": "SELECT service_level, ROUND(1.0 * SUM(lost_units) / SUM(demand_units), 4) AS lost_share FROM simulation_summary GROUP BY service_level ORDER BY service_level",
+      "ai_sql": "SELECT service_level, ROUND(CAST(SUM(lost_units) AS REAL) / SUM(demand_units), 4) AS fraction_lost FROM simulation_summary GROUP BY service_level ORDER BY service_level;",
+      "assumptions": "Fraction of lost demand is calculated as total lost units divided by total demand units across all products for each service level.",
+      "outcome": "correct",
+      "note": "Returned 5 rows; matches the verified answer."
+    },
+    {
+      "id": "Q8",
+      "question": "Which products have the longest supplier lead time, and what safety stock does each need at the 95% service level?",
+      "verified_sql": "SELECT product_code, lead_time_days, safety_stock FROM policy WHERE service_level = 0.95 AND lead_time_days = (SELECT MAX(lead_time_days) FROM policy)",
+      "ai_sql": "SELECT p.product_code, p.description, pol.lead_time_days, pol.safety_stock FROM products p JOIN policy pol ON p.product_code = pol.product_code WHERE pol.service_level = 0.95 ORDER BY pol.lead_time_days DESC, p.product_code ASC LIMIT 5",
+      "assumptions": "Assumed the user wants the products with the absolute longest lead times at the 95% service level, returning the top products ordered by lead time descending.",
+      "outcome": "wrong answer",
+      "note": "Returned 5 rows; the verified answer has 1. Corrected with the verified query."
+    },
+    {
+      "id": "Q9",
+      "question": "Which products sold more than twice as many regular units in the fourth quarter of 2010 as in the first quarter of 2010?",
+      "verified_sql": "SELECT product_code FROM daily_sales GROUP BY product_code HAVING SUM(CASE WHEN date BETWEEN '2010-10-01' AND '2010-12-31' THEN units ELSE 0 END) > 2 * SUM(CASE WHEN date BETWEEN '2010-01-01' AND '2010-03-31' THEN units ELSE 0 END)",
+      "ai_sql": "SELECT p.product_code, p.description FROM products p JOIN daily_sales d ON p.product_code = d.product_code JOIN trading_days t ON d.date = t.date WHERE t.month BETWEEN '2010-01' AND '2010-12' GROUP BY p.product_code, p.description HAVING SUM(CASE WHEN t.month BETWEEN '2010-10' AND '2010-12' THEN d.units ELSE 0 END) > 2 * SUM(CASE WHEN t.month BETWEEN '2010-01' AND '2010-03' THEN d.units ELSE 0 END)",
+      "assumptions": "Quarter 1 is defined as January to March 2010 and Quarter 4 as October to December 2010 based on the month column.",
+      "outcome": "correct",
+      "note": "Returned 15 rows; matches the verified answer."
+    },
+    {
+      "id": "Q10",
+      "question": "Which service level had the lowest combined holding cost and lost margin across all products in the 2011 backtest?",
+      "verified_sql": "SELECT service_level FROM simulation_summary GROUP BY service_level ORDER BY SUM(holding_cost + lost_margin) ASC LIMIT 1",
+      "ai_sql": "SELECT service_level, ROUND(SUM(holding_cost + lost_margin), 2) AS total_cost FROM simulation_summary GROUP BY service_level ORDER BY total_cost ASC LIMIT 1;",
+      "assumptions": "Combined holding cost and lost margin is calculated as the sum of holding_cost and lost_margin across all products for each service level.",
+      "outcome": "correct",
+      "note": "Returned 1 rows; matches the verified answer."
+    }
+  ]
+}
